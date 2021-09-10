@@ -1,0 +1,13 @@
+body {
+	background-color: rgb(233, 232, 222);
+	font-family: "Brush Script MT", "Brush Script Std", cursive;
+}
+
+.img {
+	width: 150px;
+	height: 150px;
+}
+
+.img-rock {
+    background: url("./res/rock150.png") no-repeat;
+}
