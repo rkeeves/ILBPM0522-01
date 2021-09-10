@@ -4,10 +4,34 @@ body {
 }
 
 .img {
-	width: 150px;
-	height: 150px;
+    height: 160px;
+    width: 160px;
+    border: 0;
+    background-color:  rgb(233, 232, 222);
 }
 
 .img-rock {
     background: url("./res/rock150.png") no-repeat;
+}
+
+.img-paper {
+    background: url("./res/paper150.png") no-repeat;
+}
+
+.img-scissors {
+    background: url("./res/scissors150.png") no-repeat;
+}
+
+.img-undefined {
+    background-color:  rgb(233, 232, 222);
+}
+
+.border-heavy {
+    padding: 5px;
+    border: 5px solid black;
+    border-radius: 25px;
+}
+
+.display-none {
+    display: none;
 }

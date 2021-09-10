@@ -4,10 +4,296 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spaghetti spessi</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+      crossorigin="anonymous"
+    />
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
-    <h1>Css loads check</h1>
-    <button class="img img-rock">Image loads check</button>
+    <h1 class="text-center text-white bg-dark mb-5">
+      Rock, Paper &amp; Spaghetti
+    </h1>
+    <div class="container">
+      <div class="d-flex justify-content-center my-1">
+        <button
+          id="playerRockWidget"
+          class="img img-rock"
+          onclick="application.onPlayerPicked(Gestures.ROCK)"
+        ></button>
+        <button
+          id="playerPaperWidget"
+          class="img img-paper"
+          onclick="application.onPlayerPicked(Gestures.PAPER)"
+        ></button>
+        <button
+          id="playerScissorsWidget"
+          class="img img-scissors"
+          onclick="application.onPlayerPicked(Gestures.SCISSORS)"
+        ></button>
+      </div>
+      <div class="d-flex justify-content-center">
+        <span id="promptText" class="h1 text-center">Pick a weapon!</span>
+      </div>
+      <div class="d-flex justify-content-center my-1">
+        <button
+          id="computerWidget"
+          class="img img-undefined border-heavy"
+          disabled
+        ></button>
+      </div>
+      <div class="d-flex justify-content-center my-1">
+        <span class="h1"
+          >Win<span id="winCounter" class="badge bg-dark mx-2">0</span></span
+        >
+        <span class="h1"
+          >Tie<span id="tieCounter" class="badge bg-dark mx-2">0</span></span
+        >
+        <span class="h1"
+          >Loss<span id="loseCounter" class="badge bg-dark mx-2">0</span></span
+        >
+      </div>
+      <div class="d-flex justify-content-center my-1">
+        <button
+          id="newMatch"
+          type="button"
+          class="btn btn-dark mx-2 display-none"
+          onclick="application.onNewMatch()"
+        >
+          <span class="h2">Next round!</span>
+        </button>
+        <button
+          id="reset"
+          type="button"
+          class="btn btn-dark btn-lg"
+          onclick="application.onScoreReset()"
+        >
+          <span class="h2">Reset!</span>
+        </button>
+      </div>
+    </div>
+
+    <script type="application/javascript">
+      const Gestures = {
+        UNDEFINED: -1,
+        ROCK: 0,
+        PAPER: 1,
+        SCISSORS: 2,
+        pickRandomGesture: function () {
+          return Math.floor(Math.random() * (Gestures.SCISSORS + 1));
+        },
+      };
+
+      const Result = {
+        UNDEFINED: -1,
+        WON: 0,
+        TIE: 1,
+        LOS: 2,
+        resolveMatch: function (playerGesture, opponentGesture) {
+          if (playerGesture === opponentGesture) {
+            return Result.TIE;
+          }
+          return (playerGesture + 1) % 3 === opponentGesture
+            ? Result.LOS
+            : Result.WON;
+        },
+      };
+
+      const prompts = {};
+      prompts[Result.UNDEFINED] = "Pick your weapon!";
+      prompts[Result.WON] = "You win!";
+      prompts[Result.LOS] = "You lose!";
+      prompts[Result.TIE] = "No winner!";
+
+      function initialModel() {
+        const model = {
+          wins: 0,
+          ties: 0,
+          losses: 0,
+          playerGesture: Gestures.UNDEFINED,
+          computerGesture: Gestures.UNDEFINED,
+          matchResult: Result.UNDEFINED,
+          prompt: prompts[Result.UNDEFINED],
+        };
+        return model;
+      }
+
+      function createLogic() {
+        return {
+          onPlayerPicked: function (model, playerGesture) {
+            if (model.matchResult !== Result.UNDEFINED) {
+              return model;
+            }
+            const computerGesture = Gestures.pickRandomGesture();
+            const matchResult = Result.resolveMatch(
+              playerGesture,
+              computerGesture
+            );
+            const newModel = { ...model };
+            newModel.wins = model.wins + (matchResult === Result.WON ? 1 : 0);
+            newModel.ties = model.ties + (matchResult === Result.TIE ? 1 : 0);
+            newModel.losses =
+              model.losses + (matchResult === Result.LOS ? 1 : 0);
+            newModel.playerGesture = playerGesture;
+            newModel.computerGesture = computerGesture;
+            newModel.matchResult = matchResult;
+            newModel.prompt = prompts[matchResult];
+            return newModel;
+          },
+
+          onScoreReset: function (model) {
+            if (model.matchResult === Result.UNDEFINED) {
+              return model;
+            }
+            const newModel = this.onNewMatch(model);
+            newModel.wins = 0;
+            newModel.ties = 0;
+            newModel.losses = 0;
+            return newModel;
+          },
+
+          onNewMatch: function (model) {
+            if (model.matchResult === Result.UNDEFINED) {
+              return model;
+            }
+            const newModel = { ...model };
+            newModel.playerGesture = Gestures.UNDEFINED;
+            newModel.computerGesture = Gestures.UNDEFINED;
+            newModel.matchResult = Result.UNDEFINED;
+            newModel.prompt = prompts[Result.UNDEFINED];
+            return newModel;
+          },
+        };
+      }
+
+      function bindText(elementId, textGetter) {
+        const element = document.getElementById(elementId);
+        return (model) => {
+          const newText = textGetter(model);
+          if (element.textContent != newText) {
+            element.textContent = newText;
+          }
+        };
+      }
+
+      function bindCSSClass(elementId, cssClassName, cssClassActiveGetter) {
+        const element = document.getElementById(elementId);
+        return (model) => {
+          if (cssClassActiveGetter(model)) {
+            element.classList.add(cssClassName);
+          } else {
+            element.classList.remove(cssClassName);
+          }
+        };
+      }
+
+      function bindImgClass(elementId, imgClassGetter) {
+        const element = document.getElementById(elementId);
+        return (model) => {
+          element.className = `img ${imgClassGetter(model)} border-heavy`;
+        };
+      }
+
+      function createRenderFunction() {
+        const winsWidget = bindText("winCounter", (model) => `${model.wins}`);
+        const tiesWidget = bindText("tieCounter", (model) => `${model.ties}`);
+        const lossesWidget = bindText(
+          "loseCounter",
+          (model) => `${model.losses}`
+        );
+        const promptWidget = bindText("promptText", (model) => model.prompt);
+        const rockWidget = bindCSSClass(
+          "playerRockWidget",
+          "border-heavy",
+          (model) => model.playerGesture == Gestures.ROCK
+        );
+        const paperWidget = bindCSSClass(
+          "playerPaperWidget",
+          "border-heavy",
+          (model) => model.playerGesture == Gestures.PAPER
+        );
+        const scissorsWidget = bindCSSClass(
+          "playerScissorsWidget",
+          "border-heavy",
+          (model) => model.playerGesture == Gestures.SCISSORS
+        );
+        const imgClassProp = (model) => {
+          const imgClasses = {};
+          imgClasses[Gestures.UNDEFINED] = "img-undefined";
+          imgClasses[Gestures.ROCK] = "img-rock";
+          imgClasses[Gestures.PAPER] = "img-paper";
+          imgClasses[Gestures.SCISSORS] = "img-scissors";
+          return imgClasses[model.computerGesture];
+        };
+        const computerWidget = bindImgClass("computerWidget", imgClassProp);
+        const newMatchButton = bindCSSClass(
+          "newMatch",
+          "display-none",
+          (model) => model.matchResult === Result.UNDEFINED
+        );
+        const resetButton = bindCSSClass(
+          "reset",
+          "display-none",
+          (model) => model.matchResult === Result.UNDEFINED
+        );
+        return (model) => {
+          winsWidget(model);
+          tiesWidget(model);
+          lossesWidget(model);
+          promptWidget(model);
+          rockWidget(model);
+          paperWidget(model);
+          scissorsWidget(model);
+          computerWidget(model);
+          newMatchButton(model);
+          resetButton(model);
+        };
+      }
+
+      const application = {
+        logic: createLogic(),
+        model: initialModel(),
+        renderFunction: (model) => {},
+
+        onWindowLoaded: function () {
+          this.renderFunction = createRenderFunction();
+          this.renderFunction(this.model, this.model);
+        },
+
+        onPlayerPicked: function (newPlayerGesture) {
+          const newModel = this.logic.onPlayerPicked(
+            this.model,
+            newPlayerGesture
+          );
+          this.update(newModel);
+        },
+
+        onScoreReset: function () {
+          const newModel = this.logic.onScoreReset(this.model);
+          this.update(newModel);
+        },
+
+        onNewMatch: function () {
+          const newModel = this.logic.onNewMatch(this.model);
+          this.update(newModel);
+        },
+
+        update: function (newModel) {
+          if (newModel !== this.model) {
+            this.renderFunction(newModel);
+            this.model = newModel;
+          }
+        },
+      };
+
+      window.onload = application.onWindowLoaded();
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>
